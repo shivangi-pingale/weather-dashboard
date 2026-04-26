@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <% if(locals.data && locals.aqiData){%>
+    <div class="container">
+        <div class="top">
+            <div class="location">
+                <img src="/images/location.png" alt="location icon">
+                <p>
+                    <%= geoData.features[0].properties.city %>, <%= geoData.features[0].properties.state_code %> <%=geoData.features[0].properties.country %>
+                </p>
+            </div>
+            <div class="world">
+                <img src="/images/earth4.png" alt="earth icon">
+            </div>
+            <div class="search">
+            </div>
+        </div>
+        <div class="current-weather">
+            <div class="cw-item-1">
+                <% if(locals.timezone){ const localDate = new Date(data.dt * 1000); %>
+
+                <!-- Date -->
+                <p class="date">
+                    <%= localDate.toLocaleDateString("en-GB", {
+                    timeZone: timezone,
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric"
+                    }) %>
+                </p>
+
+                <!-- Day + Time -->
+                <p class="day-time">
+                    <%= localDate.toLocaleDateString("en-US", {
+                    timeZone: timezone,
+                    weekday: "short"
+                    }) %>
+                    <%= localDate.toLocaleTimeString("en-US", {
+                    timeZone: timezone,
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true
+                    }) %> 
+                </p>
+
+                <% } %>
+            </div>
+            <div class="cw-item-2">
+                <img src="https://openweathermap.org/img/wn/<%= data.weather[0].icon %>@2x.png" alt="weather icon">
+            </div>
+            <div class="cw-item-3"><%= data.weather[0].description %></div>
+            <div class="cw-item-4"><%= data.main.temp %>&deg;</div>
+            <div class="cw-item-5">(Celsius)</div>
+            <div class="cw-item-6">
+                <p class="text">Feels like </p>
+                <p class="temp"><%= data.main.feels_like %>&deg;</p>
+            </div>
+            <div class="cw-item-7">
+                <p class="aqi-text">Air Quality: </p>
+                <% const aqi = aqiData.list[0].main.aqi;
+                switch (aqi) {
+                    case 1: %>
+                        <p class="aqi-type">Good</p>
+                        <% break;
+                    case 2: %>
+                        <p class="aqi-type">Fair</p>
+                        <% break;
+                    case 3: %>
+                        <p class="aqi-type">Moderate</p>
+                        <% break;
+                    case 4: %>
+                        <p class="aqi-type">Poor</p>
+                        <% break;
+                    case 5: %>
+                        <p class="aqi-type">Very Poor</p>
+                        <% break;
+                    default: %>
+                <% } %>
+            </div>
+        </div>
+        <div class="sunrise-sunset">
+            <div class="sunrise">
+                <div class="sunrise-text">
+                    <p>Sunrise</p>
+                </div>
+                <div class="sunrise-icon">
+                    <img src="/images/sunrise1.png" alt="sunrise icon">
+                </div>
+                <div class="sunrise-time">
+                    <% if(locals.timezone){ %>
+                        <p><%= new Date(data.sys.sunrise * 1000).toLocaleTimeString("en-US", {timeZone: timezone,hour: "numeric",minute: "2-digit",hour12: true,timeZoneName: "short"}) %></p>
+                    <%}%>
+                </div>
+            </div>
+            <div class="sunset">
+                <div class="sunset-text">
+                    <p>Sunset</p>
+                </div>
+                <div class="sunset-icon">
+                    <img src="/images/sunset1.png" alt="sunset icon">
+                </div>
+                <div class="sunset-time">
+                    <% if(locals.timezone){%>
+                        <p><%= new Date(data.sys.sunset * 1000).toLocaleTimeString("en-US", {timeZone: timezone,hour: "numeric",minute: "2-digit",hour12: true,timeZoneName: "short"}) %></p>
+                    <%}%>
+                </div>
+            </div>
+        </div>
+        <div id="location-map"></div>
+        <div class="weather-data">
+            <div class="data-item high-low">
+                <div class="data-icon">
+                    <img src="/images/temp2.png" alt="high-low temp icon">
+                </div>
+                <div class="data-name">High/Low</div>
+                <div class="data-details"><%=data.main.temp_max %>&deg;/<%= data.main.temp_min%>&deg;</div>
+            </div>
+            <div class="data-item wind">
+                <div class="data-icon">
+                    <img src="/images/wind2.png" alt="wind icon">
+                </div>
+                <div class="data-name">
+                    <p>
+                        <% const deg = data.wind.deg; %>
+                    <% if(deg < 22.5 || deg >= 337.5){ %>
+                        <span>N</span>
+                    <%}%>
+                    <% if(deg < 67.5 && deg >= 22.5){ %>
+                        <span>NE</span>
+                    <%}%>
+                    <% if(deg < 112.5 && deg >= 67.5){ %>
+                        <span>E</span>
+                    <%}%>
+                    <% if(deg < 157.5 && deg >= 112.5){ %>
+                        <span>SE</span>
+                    <%}%>
+                    <% if(deg < 202.5 && deg >= 157.5){ %>
+                        <span>S</span>
+                    <%}%>
+                    <% if(deg < 247.5 && deg >= 202.5){ %>
+                        <span>SW</span>
+                    <%}%>
+                    <% if(deg < 292.5 && deg >= 247.5){ %>
+                        <span>W</span>
+                    <%}%>
+                    <% if(deg < 337.5 && deg >= 292.5){ %>
+                        <span>NW</span>
+                    <%}%> Wind
+                    </p>
+                    
+                </div>
+                <div class="data-details">
+                    <div><span class="para">Speed: </span><%= data.wind.speed %> <span class="units">m/s</span></div>
+                    <div><span class="para">Gust: </span><%=data.wind.gust %> <span class="units">m/s</span></div>
+                </div>
+            </div>
+            <div class="data-item humidity">
+                <div class="data-icon">
+                    <img src="/images/humidity2.png" alt="humidity icon">
+                </div>
+                <div class="data-name">Humidity</div>
+                <div class="data-details"><%= data.main.humidity %> <span class="units">%</span></div>
+            </div>
+            <div class="data-item visibility">
+                <div class="data-icon">
+                    <img src="/images/visibility2.png" alt="visibility icon">
+                </div>
+                <div class="data-name">Visibility</div>
+                <div class="data-details">
+                    <%= data.visibility/1000 %> <span class="units">km</span>
+                </div>
+            </div>
+            <div class="data-item air-pressure">
+                <div class="data-icon">
+                    <img src="/images/air-pressure2.png" alt="air pressure icon">
+                </div>
+                <div class="data-name">Air Pressure</div>
+                <div class="data-details"><%= data.main.pressure %> <span class="units">hPa</span></div>
+            </div>
+            <div class="data-item clouds">
+                <div class="data-icon">
+                    <img src="/images/clouds2.png" alt="clouds icon">
+                </div>
+                <div class="data-name">Clouds</div>
+                <div class="data-details"><%= data.clouds.all %> <span class="units">%</span></div>
+            </div>
+        </div>
+    </div>
+    <%}%>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        window.onload = function () {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("lat") && params.get("lon")) return;
+
+        if (!navigator.geolocation) {
+            console.log("Geolocation not supported");
+            fallbackToIP();
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+
+            console.log("GPS Location:", lat, lon);
+
+            window.location.href = `/?lat=${lat}&lon=${lon}`;
+            },
+            (err) => {
+            console.log("User denied or error:", err.message);
+            fallbackToIP();
+            },
+            {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+            }
+        );
+
+        async function fallbackToIP() {
+            try {
+            const res = await fetch("https://ipapi.co/json/");
+            const data = await res.json();
+
+            console.log("IP Location:", data.latitude, data.longitude);
+
+            window.location.href = `/?lat=${data.latitude}&lon=${data.longitude}`;
+            } catch (error) {
+            console.error("IP fallback failed:", error);
+            }
+        }
+        };
+    </script>
+    <script>
+        window.addEventListener("DOMContentLoaded", function () {
+
+            const params = new URLSearchParams(window.location.search);
+            const lat = params.get("lat");
+            const lon = params.get("lon");
+
+            if (!lat || !lon) return;
+
+            const map = L.map("location-map").setView([lat, lon], 12);
+
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                attribution: "&copy; OpenStreetMap contributors"
+            }).addTo(map);
+
+            L.marker([lat, lon])
+                .addTo(map)
+                .bindPopup("You are here")
+                .openPopup();
+        });
+    </script>
+    
+</body>
+</html>
