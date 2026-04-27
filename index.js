@@ -10,7 +10,7 @@ const openweathermap_API_key = process.env.OPENWEATHER_API_KEY;
 const geoapify_API_key = process.env.GEOAPIFY_API_KEY;
 let units = "metric";
 
-app.use(express.static("\public"));
+app.use(express.static("public"));
 
 app.get("/", async (req, res) => {
     console.log("OpenWeatherMap key: ",openweathermap_API_key);
